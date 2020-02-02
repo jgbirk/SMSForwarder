@@ -14,4 +14,6 @@
     <string name="server_url_hint">Please specify your server url</string>
 
     <string name="senders_hint">Please specify senders number split by ,</string>
+
+    <string name="auto_sync_interval_hint">Interval to auto-sync SMS</string>
 </resources>

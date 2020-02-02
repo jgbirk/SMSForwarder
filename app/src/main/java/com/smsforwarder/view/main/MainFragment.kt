@@ -38,6 +38,12 @@ class MainFragment : BasePresenterFragment<MainContract.View, MainContract.Prese
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        (requireActivity() as MainActivity).showSendButton()
+    }
+
     override fun showSMS(sms: List<SMSViewModel>) {
         adapter.apply { items = sms }.also { it.notifyDataSetChanged() }
     }

@@ -82,4 +82,8 @@ class MainActivity : BaseActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
+    fun showSendButton() = binding.fab.show()
+
+    fun hideSendButton() = binding.fab.hide()
 }
