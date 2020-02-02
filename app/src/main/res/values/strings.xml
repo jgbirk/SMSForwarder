@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">SMSForwarder</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="main_fragment_label">SMS</string>
+    <string name="settings_fragment_label">Settings</string>
+
+    <string name="sms_sent">SMS sent</string>
+    <string name="unexpected_error">Unexpected error, please try again!</string>
+    <string name="retry">RETRY</string>
+    <string name="save">SAVE</string>
+
+    <string name="server_url">https://budgetalarms.woodview.be</string>
+    <string name="server_url_hint">Please specify your server url</string>
+
+    <string name="senders_hint">Please specify senders number split by ,</string>
+</resources>
