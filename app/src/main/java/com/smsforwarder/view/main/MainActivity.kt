@@ -18,7 +18,7 @@ import com.smsforwarder.databinding.ActivityMainBinding
 class MainActivity : BaseActivity() {
 
     companion object {
-        private const val SMS_PERMISSION = 0
+        private const val RECEIVE_SMS_PERMISSION = 0
     }
 
     private lateinit var binding: ActivityMainBinding
@@ -43,7 +43,7 @@ class MainActivity : BaseActivity() {
                     // TODO: Why you need this?
                 }
                 else -> {
-                    ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECEIVE_SMS), SMS_PERMISSION)
+                    ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECEIVE_SMS), RECEIVE_SMS_PERMISSION)
                 }
             }
         }
@@ -51,7 +51,7 @@ class MainActivity : BaseActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
-            SMS_PERMISSION -> {
+            RECEIVE_SMS_PERMISSION -> {
                 when {
                     grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED -> {
                         // Permission granted.

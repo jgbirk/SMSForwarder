@@ -53,7 +53,9 @@ class SMSReceiver : BroadcastReceiver() {
 
     private fun filterSMS(context: Context, sender: String): Boolean {
         val numbers = context.getSharedPreferences("sms_pref", Context.MODE_PRIVATE)
-            ?.getString("senders_number", null)?.split(",")
+            ?.getString("senders_number", null)
+            ?.split(",")
+            ?.filter { it.isNotEmpty() }
 
         return if (numbers == null || numbers.isEmpty()) {
             true
