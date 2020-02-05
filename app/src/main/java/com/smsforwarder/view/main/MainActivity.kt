@@ -79,6 +79,11 @@ class MainActivity : BaseActivity() {
 
                 true
             }
+            R.id.action_logs -> {
+                Navigation.findNavController(binding.root.findViewById(R.id.nav_host_fragment)).navigate(R.id.action_logs)
+
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

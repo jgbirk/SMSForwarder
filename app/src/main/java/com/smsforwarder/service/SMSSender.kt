@@ -3,6 +3,9 @@ package com.smsforwarder.service
 import android.app.job.JobParameters
 import android.app.job.JobService
 import com.smsforwarder.ServiceLocator
+import com.smsforwarder.data.db.LogEntity
+import com.smsforwarder.mapper.LogMapper
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -37,14 +40,49 @@ class SMSSender : JobService() {
 
     private fun sendSMS(onFinished: (Boolean) -> Unit) {
         disposable = ServiceLocator.smsRepository.getAll()
+            .filter { it.isNotEmpty() }
             .take(1)
             .singleOrError()
-            .flatMap {
-                ServiceLocator.smsRepository.sendSMS(it)
+            .flatMap { sms ->
+                ServiceLocator.smsRepository.sendSMS(sms).map {
+                    it to sms
+                }
             }
-            .map {
-                if (it.status == 200) {
-                    ServiceLocator.smsRepository.deleteAll()
+            .flatMap {
+                val response = it.first
+
+                if (response.status == 200) {
+                    Single.fromCallable {
+                        ServiceLocator.logRepository.insert(
+                            it.second.map {
+                                LogEntity(
+                                    text = it.text,
+                                    sender = it.sender,
+                                    timestamp = it.timestamp,
+                                    serverResponse = response.status,
+                                    serverMessage = response.message
+                                )
+                            }
+                        )
+                    }.flatMap {
+                        Single.fromCallable {
+                            ServiceLocator.smsRepository.deleteAll()
+                        }
+                    }
+                } else {
+                    Single.fromCallable {
+                        ServiceLocator.logRepository.insert(
+                            it.second.map {
+                                LogEntity(
+                                    text = it.text,
+                                    sender = it.sender,
+                                    timestamp = it.timestamp,
+                                    serverResponse = response.status,
+                                    serverMessage = response.message
+                                )
+                            }
+                        )
+                    }
                 }
             }
             .observeOn(AndroidSchedulers.mainThread())

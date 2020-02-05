@@ -7,6 +7,7 @@ import android.os.Build
 import android.telephony.SmsMessage
 import android.util.Log
 import com.smsforwarder.ServiceLocator
+import com.smsforwarder.data.db.LogEntity
 import com.smsforwarder.mapper.SMSMapper
 import com.smsforwarder.model.SMS
 import com.smsforwarder.util.DateTimeUtils
@@ -65,24 +66,29 @@ class SMSReceiver : BroadcastReceiver() {
     }
 
     private fun saveSMS(sms: SmsMessage) {
-        disposable?.dispose()
+        //disposable?.dispose()
 
         disposable = Single.fromCallable {
+            val timestamp = DateTimeUtils.getCurrentTime()
+
             ServiceLocator.smsRepository.insert(
                 SMSMapper.transform(
                     SMS(
                         sms.originatingAddress ?: "Unknown",
                         sms.messageBody,
-                        DateTimeUtils.getCurrentTime()
+                        timestamp
                     )
                 )
             )
+
+            timestamp
         }
         .subscribeOn(Schedulers.io())
         .subscribe(
             {
                 Log.d("sms", "SMS saved!")
 
+                saveLog(sms, it)
                 sendSMS()
             },
             {
@@ -91,18 +97,76 @@ class SMSReceiver : BroadcastReceiver() {
         )
     }
 
+    private fun saveLog(sms: SmsMessage, timestamp: String) {
+        //disposable?.dispose()
+
+        disposable = Single.fromCallable {
+            ServiceLocator.logRepository.insert(
+                LogEntity(
+                    sender = sms.originatingAddress ?: "Unknown",
+                    text = sms.messageBody,
+                    timestamp = timestamp
+                )
+            )
+        }
+        .subscribeOn(Schedulers.io())
+        .subscribe(
+            {
+                Log.d("sms", "SMS logged!")
+            },
+            {
+                Log.d("sms", "Error loggin SMS: ${it.message}")
+            }
+        )
+    }
+
     private fun sendSMS() {
-        disposable?.dispose()
+        //disposable?.dispose()
 
         disposable = ServiceLocator.smsRepository.getAll()
+            .filter { it.isNotEmpty() }
             .take(1)
             .singleOrError()
-            .flatMap {
-                ServiceLocator.smsRepository.sendSMS(it)
+            .flatMap { sms ->
+                ServiceLocator.smsRepository.sendSMS(sms).map {
+                    it to sms
+                }
             }
-            .map {
-                if (it.status == 200) {
-                    ServiceLocator.smsRepository.deleteAll()
+            .flatMap {
+                val response = it.first
+
+                if (response.status == 200) {
+                    Single.fromCallable {
+                        ServiceLocator.logRepository.insert(
+                            it.second.map {
+                                LogEntity(
+                                    text = it.text,
+                                    sender = it.sender,
+                                    timestamp = it.timestamp,
+                                    serverResponse = response.status,
+                                    serverMessage = response.message
+                                )
+                            }
+                        )
+                    }.flatMap {
+                        Single.fromCallable {
+                            ServiceLocator.smsRepository.deleteAll()
+                        }
+                    }
+                } else {
+                    Single.fromCallable {
+                        ServiceLocator.logRepository.insert(
+                            it.second.map {
+                                LogEntity(
+                                    text = it.text,
+                                    sender = it.sender,
+                                    timestamp = it.timestamp,
+                                    serverResponse = response.status,
+                                    serverMessage = response.message
+                                )
+                            }
+                        )
+                    }
                 }
             }
             .observeOn(AndroidSchedulers.mainThread())

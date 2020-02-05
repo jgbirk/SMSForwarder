@@ -7,7 +7,8 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = ([
-        SMSEntity::class
+        SMSEntity::class,
+        LogEntity::class
     ]),
     version = 1,
     exportSchema = false)
@@ -45,4 +46,6 @@ abstract class SMSDatabase : RoomDatabase() {
     }
 
     abstract fun smsDao(): SMSDao
+
+    abstract fun logDao(): LogDao
 }
