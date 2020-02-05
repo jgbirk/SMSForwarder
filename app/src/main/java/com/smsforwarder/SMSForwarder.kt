@@ -3,12 +3,14 @@ package com.smsforwarder
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
-import android.content.IntentFilter
+import android.content.Intent
+//import android.content.IntentFilter
 import com.facebook.stetho.Stetho
 import com.smsforwarder.data.DataModule
 import com.smsforwarder.service.SMSJobScheduler
-import com.smsforwarder.service.SMSReceiver
+//import com.smsforwarder.service.SMSReceiver
 import com.smsforwarder.service.SMSSender
+import com.smsforwarder.service.SMSService
 import java.util.concurrent.TimeUnit
 
 class SMSForwarder : Application() {
@@ -22,7 +24,9 @@ class SMSForwarder : Application() {
 
         Stetho.initializeWithDefaults(this)
 
-        registerReceiver(SMSReceiver(), IntentFilter("android.provider.Telephony.SMS_RECEIVED"))
+        //registerReceiver(SMSReceiver(), IntentFilter("android.provider.Telephony.SMS_RECEIVED"))
+
+        startService(Intent(this, SMSService::class.java))
 
         val preferences = getSharedPreferences("sms_pref", Context.MODE_PRIVATE)
 
